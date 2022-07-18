@@ -87,10 +87,11 @@ class PostTest extends TestCase
 
     public function testUpdateValid()
     {
+        
         $user = $this->user();
-        $this->actingAs($user);
+        
 
-        $post = $this->createDummyBlogPost();
+        $post = $this->createDummyBlogPost($user->id);
 
         $this->assertDatabaseHas('blog_posts', $post->toArray());
 
@@ -99,7 +100,8 @@ class PostTest extends TestCase
             'content' => 'Content was changed'
         ];
 
-        $this->put("/posts/{$post->id}", $params)
+        $this->actingAs($user)
+            ->put("/posts/{$post->id}",$params)
             ->assertStatus(302)
             ->assertSessionHas('status');
 
@@ -113,27 +115,31 @@ class PostTest extends TestCase
     public function testDelete() 
     {
         $user = $this->user();
-        $this->actingAs($user);
         
-        $post = $this->createDummyBlogPost();
+        
+        $post = $this->createDummyBlogPost($user->id);
         $this->assertDatabaseHas('blog_posts', $post->toArray());
 
-        $this->delete("/posts/{$post->id}")
+        $this->actingAs($user)
+            ->delete("/posts/{$post->id}")
             ->assertStatus(302)
             ->assertSessionHas('status');
 
         $this->assertEquals(session('status'), 'Blog post was deleted!');
-        $this->assertDatabaseMissing('blog_posts', $post->toArray());
+       //$this->assertDatabaseMissing('blog_posts', $post->toArray());
+        $this->assertSoftDeleted('blog_posts',$post->toArray());
     }
 
-    private function createDummyBlogPost(): BlogPost
+    private function createDummyBlogPost($userId = null): BlogPost
     {
         // $post = new BlogPost();
         // $post->title = 'New title';
         // $post->content = 'Content of the blog post';
         // $post->save();
 
-        return factory(BlogPost::class)->states('new-title')->create();
+        return factory(BlogPost::class)->states('new-title')->create([
+            'user_id' => $userId ?? $this->user()->id,
+        ]);
 
         // return $post;
     }
