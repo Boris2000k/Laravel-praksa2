@@ -43,7 +43,7 @@ class AuthServiceProvider extends ServiceProvider
 
         //admin bypass
         Gate::before(function ($user,$ability){
-            if($user->is_admin && in_array($ability, ['update']))
+            if($user->is_admin && in_array($ability, ['update','delete']))
             {
                 return true;
             }

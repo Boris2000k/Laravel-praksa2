@@ -6,6 +6,7 @@ use App\BlogPost;
 use App\Http\Requests\StorePost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+Use App\User;
 
 // use Illuminate\Support\Facades\DB;
 
@@ -39,8 +40,13 @@ class PostController extends Controller
 
         return view(
             'posts.index', 
-            ['posts' => BlogPost::withCount('comments')->get()]
-        );
+            [
+                'posts' => BlogPost::withCount('comments')->orderBy('created_at','desc')->get(),
+                'mostCommented' => BlogPost::mostCommented()->take(5)->get(),
+                'mostActive' => User::withMostBlogPosts()->take(5)->get(),
+                'mostActiveLastMonth' => User::withMostBlogPostsLastMonth()->take(5)->get(),
+
+            ]);
     }
 
     /**
@@ -52,8 +58,15 @@ class PostController extends Controller
      */
     public function show($id)
     {
+        // return view('posts.show', [
+        //     'post' => BlogPost::with(['comments' => function($query){
+            
+        //         return $query->latest();
+            
+        //     }])->findOrFail($id),
+        // ]);
         return view('posts.show', [
-            'post' => BlogPost::with('comments')->findOrFail($id)
+            'post'=>BlogPost::with('comments')->findOrFail($id),   
         ]);
     }
 
@@ -66,7 +79,9 @@ class PostController extends Controller
     {
         
         $validatedData = $request->validated();
+        $validatedData['user_id'] = $request->user()->id;
         $blogPost = BlogPost::create($validatedData);
+
         $request->session()->flash('status', 'Blog post was created!');
 
         return redirect()->route('posts.show', ['post' => $blogPost->id]);
