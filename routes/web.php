@@ -18,4 +18,10 @@ Route::get('/secret','HomeController@secret')->name('secret')->middleware('can:h
 Route::resource('/posts', 'PostController');
 Route::get('/posts/tag/{id}', 'PostTagController@index')->name('posts.tags.index');
 
+Route::resource('posts.comments','PostCommentController')->only(['store']);
+
+Route::get('/linkstorage', function () {
+    Artisan::call('storage:link');
+});
+
 Auth::routes();

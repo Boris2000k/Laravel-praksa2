@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\BlogPost;
 use App\Http\Requests\StorePost;
+use App\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 Use App\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -27,8 +29,7 @@ class PostController extends Controller
         return view(
             'posts.index', 
             [
-                'posts' => BlogPost::withCount('comments')
-                ->with('user')->with('tags')->orderBy('created_at','desc')->get(),
+                'posts' => BlogPost::latestWithRelations()->get(),
               
             ]);
     }
@@ -51,7 +52,7 @@ class PostController extends Controller
         // ]);
 
         $blogPost = Cache::tags(['blog-post'])->remember("blog-post-{$id}",60, function() use ($id){
-            return BlogPost::with('comments')->with('tags')->with('user')->findOrFail($id);
+            return BlogPost::with('comments','tags','user','comments.user')->findOrFail($id);
         });
 
         $sessionId = session()->getId();
@@ -112,6 +113,16 @@ class PostController extends Controller
         $validatedData['user_id'] = $request->user()->id;
         $blogPost = BlogPost::create($validatedData);
 
+        if ($request->hasFile('thumbnail'))
+        {
+            $path = $request->file('thumbnail')->store('thumbnails','public');
+
+            $blogPost->image()->save(
+                Image::create(['path'=>$path])
+            );
+            
+        }
+        
         $request->session()->flash('status', 'Blog post was created!');
 
         return redirect()->route('posts.show', ['post' => $blogPost->id]);
@@ -138,6 +149,26 @@ class PostController extends Controller
         $validatedData = $request->validated();
 
         $post->fill($validatedData);
+
+        if ($request->hasFile('thumbnail'))
+        {
+            $path = $request->file('thumbnail')->store('thumbnails','public');
+
+            if($post->image)
+            {
+                Storage::delete($post->image->path);
+                $post->image->path = $path;
+                $post->image->save();
+            }
+            else
+            {
+                $post->image()->save(
+                    Image::create(['path'=>$path])
+                );
+            }
+            
+            
+        }
         $post->save();
         $request->session()->flash('status', 'Blog post was updated!');
 
