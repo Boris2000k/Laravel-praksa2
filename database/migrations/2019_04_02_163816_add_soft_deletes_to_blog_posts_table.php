@@ -25,8 +25,8 @@ class AddSoftDeletesToBlogPostsTable extends Migration
      */
     public function down()
     {
-        // Schema::table('blog_posts', function (Blueprint $table) {
-        //     $table->dropSoftDeletes();
-        // });
+        Schema::table('blog_posts', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+        });
     }
 }

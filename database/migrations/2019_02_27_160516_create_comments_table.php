@@ -17,12 +17,10 @@ class CreateCommentsTable extends Migration
             $table->increments('id');
             $table->timestamps();
 
-            if($env = env('DB_CONNECTION')=='sqlite_testing')
-            {
+
+            if (env('DB_CONNECTION') === 'sqlite_testing') {
                 $table->text('content')->default('');
-            }
-            else
-            {
+            } else {
                 $table->text('content');
             }
 

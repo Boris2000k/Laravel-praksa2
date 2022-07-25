@@ -8,9 +8,9 @@ class HomeController extends Controller
 {
     public function home()
     {
-        //dd(Auth::check());
-        //dd(Auth::user());
-        //dd(Auth::id());
+        // dd(Auth::check());
+        // dd(Auth::id());
+        // dd(Auth::user());
         return view('home');
     }
 
@@ -23,6 +23,4 @@ class HomeController extends Controller
     {
         return view('secret');
     }
-
-    
 }

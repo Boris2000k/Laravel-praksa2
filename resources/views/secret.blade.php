@@ -1,8 +1,6 @@
 @extends('layout')
 
 @section('content')
-       
-    <p>Secret Page!</p>
-    <p>This is a secret email secret@laravel.test</p>
-
+  <h1>Secret Page!</h1>
+  <p>This is a secret email secre@laravel.test</p>
 @endsection

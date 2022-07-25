@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\BlogPost;
 use App\Comment;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PostTest extends TestCase
 {
@@ -14,11 +14,10 @@ class PostTest extends TestCase
     public function testNoBlogPostsWhenNothingInDatabase()
     {
         $response = $this->get('/posts');
-
         $response->assertSeeText('No blog posts yet!');
     }
 
-    public function testSee1BlogPostWhenThereIs1WithNoComments() 
+    public function testSee1BlogPostWhenThereIs1WithNoComments()
     {
         // Arrange
         $post = $this->createDummyBlogPost();
@@ -31,16 +30,20 @@ class PostTest extends TestCase
         $response->assertSeeText('No comments yet!');
 
         $this->assertDatabaseHas('blog_posts', [
-            'title' => 'New title'
+            'title' => 'New title',
         ]);
     }
 
     public function testSee1BlogPostWithComments()
     {
         // Arrange
+        $user = $this->user();
+
         $post = $this->createDummyBlogPost();
         factory(Comment::class, 4)->create([
-            'blog_post_id' => $post->id
+            'commentable_id' => $post->id,
+            'commentable_type' => 'App\BlogPost',
+            'user_id' => $user->id
         ]);
 
         $response = $this->get('/posts');
@@ -50,15 +53,13 @@ class PostTest extends TestCase
 
     public function testStoreValid()
     {
-        $user = $this->user();
-        $this->actingAs($user);
-
         $params = [
             'title' => 'Valid title',
-            'content' => 'At least 10 characters'
+            'content' => 'At least 10 characters',
         ];
 
-        $this->post('/posts', $params)
+        $this->actingAs($this->user())
+            ->post('/posts', $params)
             ->assertStatus(302)
             ->assertSessionHas('status');
 
@@ -67,15 +68,13 @@ class PostTest extends TestCase
 
     public function testStoreFail()
     {
-        $user = $this->user();
-        $this->actingAs($user);
-
         $params = [
             'title' => 'x',
-            'content' => 'x'
+            'content' => 'x',
         ];
 
-        $this->post('/posts', $params)
+        $this->actingAs($this->user())
+            ->post('/posts', $params)
             ->assertStatus(302)
             ->assertSessionHas('errors');
 
@@ -87,36 +86,31 @@ class PostTest extends TestCase
 
     public function testUpdateValid()
     {
-        
         $user = $this->user();
-        
-
         $post = $this->createDummyBlogPost($user->id);
 
         $this->assertDatabaseHas('blog_posts', $post->toArray());
 
         $params = [
             'title' => 'A new named title',
-            'content' => 'Content was changed'
+            'content' => 'Content was changed',
         ];
 
         $this->actingAs($user)
-            ->put("/posts/{$post->id}",$params)
+            ->put("/posts/{$post->id}", $params)
             ->assertStatus(302)
             ->assertSessionHas('status');
 
         $this->assertEquals(session('status'), 'Blog post was updated!');
         $this->assertDatabaseMissing('blog_posts', $post->toArray());
         $this->assertDatabaseHas('blog_posts', [
-            'title' => 'A new named title'
+            'title' => 'A new named title',
         ]);
     }
 
-    public function testDelete() 
+    public function testDelete()
     {
         $user = $this->user();
-        
-        
         $post = $this->createDummyBlogPost($user->id);
         $this->assertDatabaseHas('blog_posts', $post->toArray());
 
@@ -126,8 +120,8 @@ class PostTest extends TestCase
             ->assertSessionHas('status');
 
         $this->assertEquals(session('status'), 'Blog post was deleted!');
-       //$this->assertDatabaseMissing('blog_posts', $post->toArray());
-        $this->assertSoftDeleted('blog_posts',$post->toArray());
+        // $this->assertDatabaseMissing('blog_posts', $post->toArray());
+        $this->assertSoftDeleted('blog_posts', $post->toArray());
     }
 
     private function createDummyBlogPost($userId = null): BlogPost
@@ -137,9 +131,11 @@ class PostTest extends TestCase
         // $post->content = 'Content of the blog post';
         // $post->save();
 
-        return factory(BlogPost::class)->states('new-title')->create([
-            'user_id' => $userId ?? $this->user()->id,
-        ]);
+        return factory(BlogPost::class)->states('new-title')->create(
+            [
+                'user_id' => $userId ?? $this->user()->id,
+            ]
+        );
 
         // return $post;
     }

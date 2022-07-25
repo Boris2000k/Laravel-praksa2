@@ -12,9 +12,9 @@ class TagsTableSeeder extends Seeder
      */
     public function run()
     {
-        $tags = collect(['Science','Sport','Politics','Entertainment','Economy']);
+        $tags = collect(['Science', 'Sport', 'Politics', 'Entartainment', 'Economy']);
 
-        $tags->each(function ($tagName){
+        $tags->each(function ($tagName) {
             $tag = new Tag();
             $tag->name = $tagName;
             $tag->save();
