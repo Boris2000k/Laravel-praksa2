@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\BlogPost;
+use App\Events\BlogPostPosted;
 use App\Http\Requests\StorePost;
 use Illuminate\Http\Request;
-use App\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Image;
@@ -24,6 +24,7 @@ class PostController extends Controller
     {
         $this->middleware('auth')
             ->only(['create', 'store', 'edit', 'update', 'destroy']);
+        
     }
 
     /**
@@ -119,6 +120,8 @@ class PostController extends Controller
                 Image::make(['path' => $path])
             );
         }
+
+        event(new BlogPostPosted($blogPost));
 
         $request->session()->flash('status', 'Blog post was created!');
 

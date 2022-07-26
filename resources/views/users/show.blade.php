@@ -3,7 +3,7 @@
 @section('content')
     <div class="row">
         <div class="col-4">
-            <img src="{{ $user->image ? $user->image->url() : '' }}"
+            <img src="{{ $user->image ?  Storage::url($user->image->path) : '' }}"
                 class="img-thumbnail avatar" />
         </div>
         <div class="col-8">

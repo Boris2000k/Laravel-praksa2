@@ -10,7 +10,7 @@
 
         <div class="row">
             <div class="col-4">
-                <img src="{{ $user->image ? $user->image->url() : '' }}" 
+                <img src="{{ $user->image ? Storage::url($user->image->path) : '' }}" 
                 class="img-thumbnail avatar" />
 
                 <div class="card mt-4">
@@ -26,6 +26,17 @@
                     <input class="form-control" value="" type="text" name="name" />
                 </div>
 
+                <div class="form-group">
+                    <label>Language:</label>
+                    <select class="form-control" name="locale">
+                        @foreach (App\User::LOCALES as $locale => $label)
+                            <option value="{{ $locale }}"{{ $user->locale != $locale ?: 'selected' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                       
+                    </select>
+                </div>
                 @errors @enderrors
 
                 <div class="form-group">
