@@ -9,6 +9,7 @@ use App\Jobs\ThrottledMail;
 use App\Mail\CommentPosted;
 use App\Mail\CommentPostedmarkDown;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Resources\Comment as CommentResource;
 
 
 class PostCommentController extends Controller
@@ -18,6 +19,11 @@ class PostCommentController extends Controller
         $this->middleware('auth')->only(['store']);
     }
 
+    public function index(BlogPost $post)
+    {
+        return CommentResource::collection($post->comments()->with('user')->get());
+        //return $post->comments()->with('user')->get();
+    }
     public function store(BlogPost $post, StoreComment $request)
     {
         // Comment::create()

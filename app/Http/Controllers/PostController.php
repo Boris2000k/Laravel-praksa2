@@ -1,14 +1,17 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Contracts\CounterContract;
 
 use App\BlogPost;
 use App\Events\BlogPostPosted;
+use App\Facades\CounterFacade;
 use App\Http\Requests\StorePost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Image;
+
 
 // [
 //     'show' => 'view',
@@ -20,7 +23,9 @@ use App\Image;
 // ]
 class PostController extends Controller
 {
-    public function __construct()
+    
+
+    public function __construct(CounterContract $counter)
     {
         $this->middleware('auth')
             ->only(['create', 'store', 'edit', 'update', 'destroy']);
@@ -61,44 +66,11 @@ class PostController extends Controller
                 ->findOrFail($id);
         });
 
-        $sessionId = session()->getId();
-        $counterKey = "blog-post-{$id}-counter";
-        $usersKey = "blog-post-{$id}-users";
-
-        $users = Cache::tags(['blog-post'])->get($usersKey, []);
-        $usersUpdate = [];
-        $diffrence = 0;
-        $now = now();
-
-        foreach ($users as $session => $lastVisit) {
-            if ($now->diffInMinutes($lastVisit) >= 1) {
-                $diffrence--;
-            } else {
-                $usersUpdate[$session] = $lastVisit;
-            }
-        }
-
-        if(
-            !array_key_exists($sessionId, $users)
-            || $now->diffInMinutes($users[$sessionId]) >= 1
-        ) {
-            $diffrence++;
-        }
-
-        $usersUpdate[$sessionId] = $now;
-        Cache::tags(['blog-post'])->forever($usersKey, $usersUpdate);
-
-        if (!Cache::tags(['blog-post'])->has($counterKey)) {
-            Cache::tags(['blog-post'])->forever($counterKey, 1);
-        } else {
-            Cache::tags(['blog-post'])->increment($counterKey, $diffrence);
-        }
-        
-        $counter = Cache::tags(['blog-post'])->get($counterKey);
+    //    $counter = resolve(Counter::class);
 
         return view('posts.show', [
             'post' => $blogPost,
-            'counter' => $counter,
+            'counter' => CounterFacade::increment("blog-post-{$id}", ['blog-post']),
         ]);
     }
 

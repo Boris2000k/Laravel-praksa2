@@ -44,6 +44,7 @@ return [
         'api' => [
             'driver' => 'token',
             'provider' => 'users',
+            // 'input_key' => 'token'
         ],
     ],
 
